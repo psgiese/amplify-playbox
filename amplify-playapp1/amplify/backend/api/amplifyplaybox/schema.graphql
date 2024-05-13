@@ -1,11 +1,117 @@
-type Contractor @model @auth(rules: [{allow: public}]) {
+type BusinessContactRelationships @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  contact_role_name: String
+  relationship_created_on: AWSDate
+  is_active_relationship: Boolean!
+  relationship_ended_on: AWSDate
+  relationship_ended_by: ID
+  businessesID: ID! @index(name: "byBusinesses")
+  contactID: ID! @index(name: "byContact")
+}
+
+type BusinessTypes @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  business_type_name: String!
+  is_active: Boolean!
+  created_by: ID
+  Businesses: [Businesses] @hasMany(indexName: "byBusinessTypes", fields: ["id"])
+}
+
+type Businesses @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  business_name: String
+  address: String!
+  city: String
+  state: String
+  zip: String
+  business_phone: AWSPhone
+  business_email: AWSEmail
+  website: AWSURL
+  license_registration_id: String
+  license_issued_by: String
+  license_expiration_date: AWSDate
+  general_liability_insurance: AWSJSON
+  license_registration_name: String
+  business_type_name: String!
+  businesstypesID: ID! @index(name: "byBusinessTypes")
+  BusinessContactRelationships: [BusinessContactRelationships] @hasMany(indexName: "byBusinesses", fields: ["id"])
+  Projects: [Project] @hasMany(indexName: "byBusinesses", fields: ["id"])
+  contacts: [Contact] @manyToMany(relationName: "ContactBusinesses")
+}
+
+type ContactTypes @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  contact_type_name: String!
+  is_active: Boolean!
+  created_by: ID!
+  Contacts: [Contact] @hasMany(indexName: "byContactTypes", fields: ["id"])
+}
+
+type ContractorProjectRelationships @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  project_id: ID!
+  contact_id: ID
+  work_start_date: AWSDate
+  work_end_date: AWSDate
+  review_id: ID
+  marked_complete_by: ID
+  marked_complete_on: AWSDate
+  work_item_id: ID
+  projectID: ID! @index(name: "byProject")
+  contactID: ID! @index(name: "byContact")
+}
+
+type Project @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  address: String
+  bath_count: Float
+  bed_count: Int
+  projected_start_date: AWSDate
+  actual_start_date: AWSDate
+  builder_id: ID
+  city: String
+  state: String
+  actual_inspection_date: AWSDate
+  lot_block: String
+  model_name: String
+  permit_number: String
+  projected_list_price: Float
+  projected_completion_date: AWSDate
+  actual_completion_date: AWSDate
+  subdivision: String
+  approximate_latitude: Float
+  approximate_longitude: Float
+  approximate_sqft_house: Int
+  assigned_super_id: ID
+  project_notes: String
+  ContractorProjectRelationships: [ContractorProjectRelationships] @hasMany(indexName: "byProject", fields: ["id"])
+  inspector_id: ID
+  project_name: String
+  created_by: String
+  zip: Int
+  businessesID: ID! @index(name: "byBusinesses")
+}
+
+type Contact @model @auth(rules: [{allow: public}]) {
   id: ID!
   first_name: String!
   last_name: String!
-  phone: AWSPhone!
-  email: AWSEmail!
-  business_id: ID
-  business_name: String
-  license_number: String
-  insurance_id: ID
-} 
+  primary_phone: AWSPhone!
+  address: String
+  city: String
+  state: String
+  zip: String
+  allowed_actions: [AWSJSON!]
+  ok_to_bid: Boolean!
+  secondary_phone: AWSPhone
+  secondary_email: AWSEmail
+  website: AWSURL
+  ContractorProjectRelationships: [ContractorProjectRelationships] @hasMany(indexName: "byContact", fields: ["id"])
+  primary_email: AWSEmail
+  BusinessContactRelationships: [BusinessContactRelationships] @hasMany(indexName: "byContact", fields: ["id"])
+  contacttypesID: ID! @index(name: "byContactTypes")
+  bid_email: AWSEmail
+  bid_phone: AWSPhone
+  Businesses: [Businesses] @manyToMany(relationName: "ContactBusinesses")
+}
+ 

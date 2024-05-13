@@ -5,7 +5,6 @@
  **************************************************************************/
 
 import * as React from "react";
-import { Contractor } from "../models";
 import { ButtonProps, FlexProps, ImageProps, TextProps } from "@aws-amplify/ui-react";
 import { MyIconProps } from "./MyIcon";
 export declare type EscapeHatchProps = {
@@ -31,7 +30,7 @@ export declare type ProfileCardOverridesProps = {
     Button?: PrimitiveOverrideProps<ButtonProps>;
 } & EscapeHatchProps;
 export declare type ProfileCardProps = React.PropsWithChildren<Partial<FlexProps> & {
-    contractor?: Contractor;
+    co?: any;
 } & {
     overrides?: ProfileCardOverridesProps | undefined | null;
 }>;

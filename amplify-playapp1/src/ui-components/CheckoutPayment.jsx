@@ -113,7 +113,6 @@ export default function CheckoutPayment(props) {
               label="Credit card number"
               shrink="0"
               alignSelf="stretch"
-              placeholder=""
               size="default"
               isDisabled={false}
               labelHidden={false}
@@ -140,7 +139,6 @@ export default function CheckoutPayment(props) {
                 grow="1"
                 shrink="1"
                 basis="0"
-                placeholder=""
                 size="default"
                 isDisabled={false}
                 labelHidden={false}
@@ -154,7 +152,6 @@ export default function CheckoutPayment(props) {
                 grow="1"
                 shrink="1"
                 basis="0"
-                placeholder=""
                 size="default"
                 isDisabled={false}
                 labelHidden={false}
@@ -182,7 +179,6 @@ export default function CheckoutPayment(props) {
               label="Discount code"
               shrink="0"
               alignSelf="stretch"
-              placeholder=""
               size="default"
               isDisabled={false}
               labelHidden={false}

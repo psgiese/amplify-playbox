@@ -10,7 +10,7 @@ import { getOverrideProps } from "./utils";
 import { Button, Flex, Image, Text } from "@aws-amplify/ui-react";
 import MyIcon from "./MyIcon";
 export default function ProfileCard(props) {
-  const { contractor, overrides, ...rest } = props;
+  const { co, overrides, ...rest } = props;
   return (
     <Flex
       gap="24px"
@@ -69,7 +69,7 @@ export default function ProfileCard(props) {
           position="relative"
           padding="0px 0px 0px 0px"
           whiteSpace="pre-wrap"
-          children={`${contractor?.first_name}${" "}${contractor?.last_name}`}
+          children="Melinda Marcus"
           {...getOverrideProps(overrides, "Melinda Marcus")}
         ></Text>
         <Text
@@ -91,7 +91,7 @@ export default function ProfileCard(props) {
           position="relative"
           padding="0px 0px 0px 0px"
           whiteSpace="pre-wrap"
-          children={contractor?.business_name}
+          children="Design Engineer at Cloth Studios"
           {...getOverrideProps(overrides, "Design Engineer at Cloth Studios")}
         ></Text>
       </Flex>
@@ -140,7 +140,7 @@ export default function ProfileCard(props) {
           position="relative"
           padding="0px 0px 0px 0px"
           whiteSpace="pre-wrap"
-          children={contractor?.license_number}
+          children="99 Followers"
           {...getOverrideProps(overrides, "99 Followers")}
         ></Text>
       </Flex>

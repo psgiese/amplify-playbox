@@ -5,7 +5,6 @@
  **************************************************************************/
 
 import * as React from "react";
-import { Contractor } from "../models";
 import { MyIconProps } from "./MyIcon";
 import { ButtonProps, FlexProps, ImageProps, TextFieldProps, TextProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
@@ -27,16 +26,19 @@ export declare type ContractorProfileOverridesProps = {
     "Edit Profile29766916"?: PrimitiveOverrideProps<TextProps>;
     Profile?: PrimitiveOverrideProps<FlexProps>;
     image?: PrimitiveOverrideProps<ImageProps>;
-    "Upload New Image"?: PrimitiveOverrideProps<TextProps>;
     Forms?: PrimitiveOverrideProps<FlexProps>;
     TextField29766922?: PrimitiveOverrideProps<TextFieldProps>;
     TextField29766923?: PrimitiveOverrideProps<TextFieldProps>;
-    TextField29766924?: PrimitiveOverrideProps<TextFieldProps>;
+    TextField4853783?: PrimitiveOverrideProps<TextFieldProps>;
+    TextField4853692?: PrimitiveOverrideProps<TextFieldProps>;
+    TextField4853734?: PrimitiveOverrideProps<TextFieldProps>;
     TextField4846537?: PrimitiveOverrideProps<TextFieldProps>;
+    TextField29766924?: PrimitiveOverrideProps<TextFieldProps>;
+    TextField4853991?: PrimitiveOverrideProps<TextFieldProps>;
     Button?: PrimitiveOverrideProps<ButtonProps>;
 } & EscapeHatchProps;
 export declare type ContractorProfileProps = React.PropsWithChildren<Partial<FlexProps> & {
-    contractor?: Contractor;
+    ContactInfo?: any;
 } & {
     overrides?: ContractorProfileOverridesProps | undefined | null;
 }>;

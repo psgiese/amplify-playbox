@@ -10,13 +10,13 @@ import { getOverrideProps } from "./utils";
 import MyIcon from "./MyIcon";
 import { Button, Flex, Image, Text, TextField } from "@aws-amplify/ui-react";
 export default function ContractorProfile(props) {
-  const { contractor, overrides, ...rest } = props;
+  const { ContactInfo, overrides, ...rest } = props;
   return (
     <Flex
       gap="16px"
       direction="column"
       width="640px"
-      height="unset"
+      height="1202px"
       justifyContent="flex-start"
       alignItems="flex-start"
       position="relative"
@@ -90,130 +90,151 @@ export default function ContractorProfile(props) {
         <Flex
           gap="16px"
           direction="row"
-          width="unset"
-          height="unset"
+          width="107px"
+          height="107px"
           justifyContent="flex-start"
           alignItems="center"
           shrink="0"
-          alignSelf="stretch"
           position="relative"
           padding="0px 0px 0px 0px"
           {...getOverrideProps(overrides, "Profile")}
-        >
-          <Image
-            width="96px"
-            height="96px"
-            display="block"
-            gap="unset"
-            alignItems="unset"
-            justifyContent="unset"
-            shrink="0"
-            position="relative"
-            borderRadius="160px"
-            padding="0px 0px 0px 0px"
-            objectFit="cover"
-            {...getOverrideProps(overrides, "image")}
-          ></Image>
-          <Text
-            fontFamily="Inter"
-            fontSize="16px"
-            fontWeight="400"
-            color="rgba(13,26,38,1)"
-            lineHeight="22px"
-            textAlign="left"
-            display="block"
-            direction="column"
-            justifyContent="unset"
-            textDecoration="underline"
-            width="unset"
-            height="unset"
-            gap="unset"
-            alignItems="unset"
-            shrink="0"
-            position="relative"
-            padding="0px 0px 0px 0px"
-            whiteSpace="pre-wrap"
-            children="Upload New Image"
-            {...getOverrideProps(overrides, "Upload New Image")}
-          ></Text>
-        </Flex>
-        <Flex
-          gap="16px"
-          direction="column"
+        ></Flex>
+        <Image
+          width="80px"
+          height="80px"
+          display="block"
+          gap="unset"
+          alignItems="unset"
+          justifyContent="unset"
+          shrink="0"
+          position="relative"
+          border="1px SOLID rgba(0,0,0,1)"
+          boxShadow="0px 4px 4px rgba(0, 0, 0, 0.25)"
+          borderRadius="160px"
+          padding="0px 0px 0px 0px"
+          objectFit="cover"
+          {...getOverrideProps(overrides, "image")}
+        ></Image>
+      </Flex>
+      <Flex
+        gap="20px"
+        direction="column"
+        width="640px"
+        height="789px"
+        justifyContent="center"
+        alignItems="flex-start"
+        shrink="0"
+        position="relative"
+        padding="0px 20px 0px 20px"
+        {...getOverrideProps(overrides, "Forms")}
+      >
+        <TextField
           width="unset"
           height="unset"
-          justifyContent="flex-start"
-          alignItems="flex-start"
+          label="Full name"
           shrink="0"
           alignSelf="stretch"
-          position="relative"
-          padding="0px 0px 0px 0px"
-          {...getOverrideProps(overrides, "Forms")}
-        >
-          <TextField
-            width="unset"
-            height="unset"
-            label="Full name"
-            placeholder="John Doe"
-            shrink="0"
-            alignSelf="stretch"
-            size="default"
-            isDisabled={false}
-            labelHidden={false}
-            variation="default"
-            {...getOverrideProps(overrides, "TextField29766922")}
-          ></TextField>
-          <TextField
-            width="unset"
-            height="unset"
-            label="Location"
-            placeholder="Seattle, WA"
-            shrink="0"
-            alignSelf="stretch"
-            size="default"
-            isDisabled={false}
-            labelHidden={false}
-            variation="default"
-            {...getOverrideProps(overrides, "TextField29766923")}
-          ></TextField>
-          <TextField
-            width="unset"
-            height="unset"
-            label="Email"
-            placeholder="john.doe@awsamplify.com"
-            shrink="0"
-            alignSelf="stretch"
-            size="default"
-            isDisabled={false}
-            labelHidden={false}
-            variation="default"
-            {...getOverrideProps(overrides, "TextField29766924")}
-          ></TextField>
-          <TextField
-            width="unset"
-            height="unset"
-            label="Phone Number"
-            placeholder="john.doe@awsamplify.com"
-            shrink="0"
-            alignSelf="stretch"
-            size="default"
-            isDisabled={false}
-            labelHidden={false}
-            variation="default"
-            {...getOverrideProps(overrides, "TextField4846537")}
-          ></TextField>
-        </Flex>
-        <Button
-          width="unset"
-          height="unset"
-          shrink="0"
           size="default"
           isDisabled={false}
-          variation="primary"
-          children="Save"
-          {...getOverrideProps(overrides, "Button")}
-        ></Button>
+          labelHidden={false}
+          variation="default"
+          {...getOverrideProps(overrides, "TextField29766922")}
+        ></TextField>
+        <TextField
+          width="unset"
+          height="unset"
+          label="Business Name"
+          shrink="0"
+          alignSelf="stretch"
+          size="default"
+          isDisabled={false}
+          labelHidden={false}
+          variation="default"
+          {...getOverrideProps(overrides, "TextField29766923")}
+        ></TextField>
+        <TextField
+          width="unset"
+          height="unset"
+          label="Address"
+          shrink="0"
+          alignSelf="stretch"
+          size="default"
+          isDisabled={false}
+          labelHidden={false}
+          variation="default"
+          {...getOverrideProps(overrides, "TextField4853783")}
+        ></TextField>
+        <TextField
+          width="unset"
+          height="unset"
+          label="Idaho Contractors License #"
+          shrink="0"
+          alignSelf="stretch"
+          size="default"
+          isDisabled={false}
+          labelHidden={false}
+          variation="default"
+          {...getOverrideProps(overrides, "TextField4853692")}
+        ></TextField>
+        <TextField
+          width="unset"
+          height="unset"
+          label="Primary Email"
+          shrink="0"
+          alignSelf="stretch"
+          size="default"
+          isDisabled={false}
+          labelHidden={false}
+          variation="default"
+          {...getOverrideProps(overrides, "TextField4853734")}
+        ></TextField>
+        <TextField
+          width="unset"
+          height="unset"
+          label="Primary Phone Number"
+          shrink="0"
+          alignSelf="stretch"
+          size="default"
+          isDisabled={false}
+          labelHidden={false}
+          variation="default"
+          {...getOverrideProps(overrides, "TextField4846537")}
+        ></TextField>
+        <TextField
+          width="unset"
+          height="unset"
+          label="Bid Email"
+          shrink="0"
+          alignSelf="stretch"
+          size="default"
+          isDisabled={false}
+          labelHidden={false}
+          variation="default"
+          {...getOverrideProps(overrides, "TextField29766924")}
+        ></TextField>
+        <TextField
+          width="unset"
+          height="unset"
+          label="Bid Phone Number"
+          shrink="0"
+          alignSelf="stretch"
+          size="default"
+          isDisabled={false}
+          labelHidden={false}
+          variation="default"
+          {...getOverrideProps(overrides, "TextField4853991")}
+        ></TextField>
       </Flex>
+      <Button
+        width="unset"
+        height="unset"
+        shrink="0"
+        size="default"
+        isDisabled={false}
+        variation="primary"
+        children="Save"
+        {...getOverrideProps(overrides, "Button")}
+      ></Button>
     </Flex>
   );
 }

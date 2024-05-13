@@ -53,7 +53,6 @@ export default function ContactUs(props) {
           grow="1"
           shrink="1"
           basis="0"
-          placeholder=""
           size="default"
           isDisabled={false}
           labelHidden={false}
@@ -67,7 +66,6 @@ export default function ContactUs(props) {
           grow="1"
           shrink="1"
           basis="0"
-          placeholder=""
           size="default"
           isDisabled={false}
           labelHidden={false}
@@ -81,7 +79,6 @@ export default function ContactUs(props) {
         label="Email address"
         shrink="0"
         alignSelf="stretch"
-        placeholder=""
         size="default"
         isDisabled={false}
         labelHidden={false}
