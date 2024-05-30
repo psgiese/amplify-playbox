@@ -6,12 +6,187 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Autocomplete,
+  Badge,
+  Button,
+  Divider,
+  Flex,
+  Grid,
+  Icon,
+  ScrollView,
+  Text,
+  TextField,
+  useTheme,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
-import { getProject } from "../graphql/queries";
-import { updateProject } from "../graphql/mutations";
+import {
+  getBusinesses,
+  getProject,
+  listBusinesses,
+  listContractorProjectRelationships,
+} from "../graphql/queries";
+import {
+  updateContractorProjectRelationships,
+  updateProject,
+} from "../graphql/mutations";
 const client = generateClient();
+function ArrayField({
+  items = [],
+  onChange,
+  label,
+  inputFieldRef,
+  children,
+  hasError,
+  setFieldValue,
+  currentFieldValue,
+  defaultFieldValue,
+  lengthLimit,
+  getBadgeText,
+  runValidationTasks,
+  errorMessage,
+}) {
+  const labelElement = <Text>{label}</Text>;
+  const {
+    tokens: {
+      components: {
+        fieldmessages: { error: errorStyles },
+      },
+    },
+  } = useTheme();
+  const [selectedBadgeIndex, setSelectedBadgeIndex] = React.useState();
+  const [isEditing, setIsEditing] = React.useState();
+  React.useEffect(() => {
+    if (isEditing) {
+      inputFieldRef?.current?.focus();
+    }
+  }, [isEditing]);
+  const removeItem = async (removeIndex) => {
+    const newItems = items.filter((value, index) => index !== removeIndex);
+    await onChange(newItems);
+    setSelectedBadgeIndex(undefined);
+  };
+  const addItem = async () => {
+    const { hasError } = runValidationTasks();
+    if (
+      currentFieldValue !== undefined &&
+      currentFieldValue !== null &&
+      currentFieldValue !== "" &&
+      !hasError
+    ) {
+      const newItems = [...items];
+      if (selectedBadgeIndex !== undefined) {
+        newItems[selectedBadgeIndex] = currentFieldValue;
+        setSelectedBadgeIndex(undefined);
+      } else {
+        newItems.push(currentFieldValue);
+      }
+      await onChange(newItems);
+      setIsEditing(false);
+    }
+  };
+  const arraySection = (
+    <React.Fragment>
+      {!!items?.length && (
+        <ScrollView height="inherit" width="inherit" maxHeight={"7rem"}>
+          {items.map((value, index) => {
+            return (
+              <Badge
+                key={index}
+                style={{
+                  cursor: "pointer",
+                  alignItems: "center",
+                  marginRight: 3,
+                  marginTop: 3,
+                  backgroundColor:
+                    index === selectedBadgeIndex ? "#B8CEF9" : "",
+                }}
+                onClick={() => {
+                  setSelectedBadgeIndex(index);
+                  setFieldValue(items[index]);
+                  setIsEditing(true);
+                }}
+              >
+                {getBadgeText ? getBadgeText(value) : value.toString()}
+                <Icon
+                  style={{
+                    cursor: "pointer",
+                    paddingLeft: 3,
+                    width: 20,
+                    height: 20,
+                  }}
+                  viewBox={{ width: 20, height: 20 }}
+                  paths={[
+                    {
+                      d: "M10 10l5.09-5.09L10 10l5.09 5.09L10 10zm0 0L4.91 4.91 10 10l-5.09 5.09L10 10z",
+                      stroke: "black",
+                    },
+                  ]}
+                  ariaLabel="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    removeItem(index);
+                  }}
+                />
+              </Badge>
+            );
+          })}
+        </ScrollView>
+      )}
+      <Divider orientation="horizontal" marginTop={5} />
+    </React.Fragment>
+  );
+  if (lengthLimit !== undefined && items.length >= lengthLimit && !isEditing) {
+    return (
+      <React.Fragment>
+        {labelElement}
+        {arraySection}
+      </React.Fragment>
+    );
+  }
+  return (
+    <React.Fragment>
+      {labelElement}
+      {isEditing && children}
+      {!isEditing ? (
+        <>
+          <Button
+            onClick={() => {
+              setIsEditing(true);
+            }}
+          >
+            Add item
+          </Button>
+          {errorMessage && hasError && (
+            <Text color={errorStyles.color} fontSize={errorStyles.fontSize}>
+              {errorMessage}
+            </Text>
+          )}
+        </>
+      ) : (
+        <Flex justifyContent="flex-end">
+          {(currentFieldValue || isEditing) && (
+            <Button
+              children="Cancel"
+              type="button"
+              size="small"
+              onClick={() => {
+                setFieldValue(defaultFieldValue);
+                setIsEditing(false);
+                setSelectedBadgeIndex(undefined);
+              }}
+            ></Button>
+          )}
+          <Button size="small" variation="link" onClick={addItem}>
+            {selectedBadgeIndex !== undefined ? "Save" : "Add"}
+          </Button>
+        </Flex>
+      )}
+      {arraySection}
+    </React.Fragment>
+  );
+}
 export default function ProjectUpdateForm(props) {
   const {
     id: idProp,
@@ -46,10 +221,12 @@ export default function ProjectUpdateForm(props) {
     approximate_sqft_house: "",
     assigned_super_id: "",
     project_notes: "",
+    ContractorProjectRelationships: [],
     inspector_id: "",
     project_name: "",
     created_by: "",
     zip: "",
+    businessesID: undefined,
   };
   const [address, setAddress] = React.useState(initialValues.address);
   const [bath_count, setBath_count] = React.useState(initialValues.bath_count);
@@ -97,6 +274,16 @@ export default function ProjectUpdateForm(props) {
   const [project_notes, setProject_notes] = React.useState(
     initialValues.project_notes
   );
+  const [ContractorProjectRelationships, setContractorProjectRelationships] =
+    React.useState(initialValues.ContractorProjectRelationships);
+  const [
+    ContractorProjectRelationshipsLoading,
+    setContractorProjectRelationshipsLoading,
+  ] = React.useState(false);
+  const [
+    contractorProjectRelationshipsRecords,
+    setContractorProjectRelationshipsRecords,
+  ] = React.useState([]);
   const [inspector_id, setInspector_id] = React.useState(
     initialValues.inspector_id
   );
@@ -105,10 +292,23 @@ export default function ProjectUpdateForm(props) {
   );
   const [created_by, setCreated_by] = React.useState(initialValues.created_by);
   const [zip, setZip] = React.useState(initialValues.zip);
+  const [businessesID, setBusinessesID] = React.useState(
+    initialValues.businessesID
+  );
+  const [businessesIDLoading, setBusinessesIDLoading] = React.useState(false);
+  const [businessesIDRecords, setBusinessesIDRecords] = React.useState([]);
+  const [selectedBusinessesIDRecords, setSelectedBusinessesIDRecords] =
+    React.useState([]);
+  const autocompleteLength = 10;
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = projectRecord
-      ? { ...initialValues, ...projectRecord }
+      ? {
+          ...initialValues,
+          ...projectRecord,
+          ContractorProjectRelationships: linkedContractorProjectRelationships,
+          businessesID,
+        }
       : initialValues;
     setAddress(cleanValues.address);
     setBath_count(cleanValues.bath_count);
@@ -131,13 +331,26 @@ export default function ProjectUpdateForm(props) {
     setApproximate_sqft_house(cleanValues.approximate_sqft_house);
     setAssigned_super_id(cleanValues.assigned_super_id);
     setProject_notes(cleanValues.project_notes);
+    setContractorProjectRelationships(
+      cleanValues.ContractorProjectRelationships ?? []
+    );
+    setCurrentContractorProjectRelationshipsValue(undefined);
+    setCurrentContractorProjectRelationshipsDisplayValue("");
     setInspector_id(cleanValues.inspector_id);
     setProject_name(cleanValues.project_name);
     setCreated_by(cleanValues.created_by);
     setZip(cleanValues.zip);
+    setBusinessesID(cleanValues.businessesID);
+    setCurrentBusinessesIDValue(undefined);
+    setCurrentBusinessesIDDisplayValue("");
     setErrors({});
   };
   const [projectRecord, setProjectRecord] = React.useState(projectModelProp);
+  const [
+    linkedContractorProjectRelationships,
+    setLinkedContractorProjectRelationships,
+  ] = React.useState([]);
+  const canUnlinkContractorProjectRelationships = false;
   React.useEffect(() => {
     const queryData = async () => {
       const record = idProp
@@ -148,11 +361,62 @@ export default function ProjectUpdateForm(props) {
             })
           )?.data?.getProject
         : projectModelProp;
+      const linkedContractorProjectRelationships =
+        record?.ContractorProjectRelationships?.items ?? [];
+      setLinkedContractorProjectRelationships(
+        linkedContractorProjectRelationships
+      );
+      const businessesIDRecord = record ? record.businessesID : undefined;
+      const businessesRecord = businessesIDRecord
+        ? (
+            await client.graphql({
+              query: getBusinesses.replaceAll("__typename", ""),
+              variables: { id: businessesIDRecord },
+            })
+          )?.data?.getBusinesses
+        : undefined;
+      setBusinessesID(businessesIDRecord);
+      setSelectedBusinessesIDRecords([businessesRecord]);
       setProjectRecord(record);
     };
     queryData();
   }, [idProp, projectModelProp]);
-  React.useEffect(resetStateValues, [projectRecord]);
+  React.useEffect(resetStateValues, [
+    projectRecord,
+    linkedContractorProjectRelationships,
+    businessesID,
+  ]);
+  const [
+    currentContractorProjectRelationshipsDisplayValue,
+    setCurrentContractorProjectRelationshipsDisplayValue,
+  ] = React.useState("");
+  const [
+    currentContractorProjectRelationshipsValue,
+    setCurrentContractorProjectRelationshipsValue,
+  ] = React.useState(undefined);
+  const ContractorProjectRelationshipsRef = React.createRef();
+  const [currentBusinessesIDDisplayValue, setCurrentBusinessesIDDisplayValue] =
+    React.useState("");
+  const [currentBusinessesIDValue, setCurrentBusinessesIDValue] =
+    React.useState(undefined);
+  const businessesIDRef = React.createRef();
+  const getIDValue = {
+    ContractorProjectRelationships: (r) => JSON.stringify({ id: r?.id }),
+  };
+  const ContractorProjectRelationshipsIdSet = new Set(
+    Array.isArray(ContractorProjectRelationships)
+      ? ContractorProjectRelationships.map((r) =>
+          getIDValue.ContractorProjectRelationships?.(r)
+        )
+      : getIDValue.ContractorProjectRelationships?.(
+          ContractorProjectRelationships
+        )
+  );
+  const getDisplayValue = {
+    ContractorProjectRelationships: (r) => r?.id,
+    businessesID: (r) =>
+      `${r?.business_name ? r?.business_name + " - " : ""}${r?.id}`,
+  };
   const validations = {
     address: [],
     bath_count: [],
@@ -175,10 +439,12 @@ export default function ProjectUpdateForm(props) {
     approximate_sqft_house: [],
     assigned_super_id: [],
     project_notes: [],
+    ContractorProjectRelationships: [],
     inspector_id: [],
     project_name: [],
     created_by: [],
     zip: [],
+    businessesID: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -197,6 +463,75 @@ export default function ProjectUpdateForm(props) {
     setErrors((errors) => ({ ...errors, [fieldName]: validationResponse }));
     return validationResponse;
   };
+  const fetchContractorProjectRelationshipsRecords = async (value) => {
+    setContractorProjectRelationshipsLoading(true);
+    const newOptions = [];
+    let newNext = "";
+    while (newOptions.length < autocompleteLength && newNext != null) {
+      const variables = {
+        limit: autocompleteLength * 5,
+        filter: { or: [{ id: { contains: value } }] },
+      };
+      if (newNext) {
+        variables["nextToken"] = newNext;
+      }
+      const result = (
+        await client.graphql({
+          query: listContractorProjectRelationships.replaceAll(
+            "__typename",
+            ""
+          ),
+          variables,
+        })
+      )?.data?.listContractorProjectRelationships?.items;
+      var loaded = result.filter(
+        (item) =>
+          !ContractorProjectRelationshipsIdSet.has(
+            getIDValue.ContractorProjectRelationships?.(item)
+          )
+      );
+      newOptions.push(...loaded);
+      newNext = result.nextToken;
+    }
+    setContractorProjectRelationshipsRecords(
+      newOptions.slice(0, autocompleteLength)
+    );
+    setContractorProjectRelationshipsLoading(false);
+  };
+  const fetchBusinessesIDRecords = async (value) => {
+    setBusinessesIDLoading(true);
+    const newOptions = [];
+    let newNext = "";
+    while (newOptions.length < autocompleteLength && newNext != null) {
+      const variables = {
+        limit: autocompleteLength * 5,
+        filter: {
+          or: [
+            { business_name: { contains: value } },
+            { id: { contains: value } },
+          ],
+        },
+      };
+      if (newNext) {
+        variables["nextToken"] = newNext;
+      }
+      const result = (
+        await client.graphql({
+          query: listBusinesses.replaceAll("__typename", ""),
+          variables,
+        })
+      )?.data?.listBusinesses?.items;
+      var loaded = result.filter((item) => businessesID !== item.id);
+      newOptions.push(...loaded);
+      newNext = result.nextToken;
+    }
+    setBusinessesIDRecords(newOptions.slice(0, autocompleteLength));
+    setBusinessesIDLoading(false);
+  };
+  React.useEffect(() => {
+    fetchContractorProjectRelationshipsRecords("");
+    fetchBusinessesIDRecords("");
+  }, []);
   return (
     <Grid
       as="form"
@@ -227,23 +562,34 @@ export default function ProjectUpdateForm(props) {
           approximate_sqft_house: approximate_sqft_house ?? null,
           assigned_super_id: assigned_super_id ?? null,
           project_notes: project_notes ?? null,
+          ContractorProjectRelationships:
+            ContractorProjectRelationships ?? null,
           inspector_id: inspector_id ?? null,
           project_name: project_name ?? null,
           created_by: created_by ?? null,
           zip: zip ?? null,
+          businessesID: businessesID ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
             if (Array.isArray(modelFields[fieldName])) {
               promises.push(
                 ...modelFields[fieldName].map((item) =>
-                  runValidationTasks(fieldName, item)
+                  runValidationTasks(
+                    fieldName,
+                    item,
+                    getDisplayValue[fieldName]
+                  )
                 )
               );
               return promises;
             }
             promises.push(
-              runValidationTasks(fieldName, modelFields[fieldName])
+              runValidationTasks(
+                fieldName,
+                modelFields[fieldName],
+                getDisplayValue[fieldName]
+              )
             );
             return promises;
           }, [])
@@ -260,15 +606,117 @@ export default function ProjectUpdateForm(props) {
               modelFields[key] = null;
             }
           });
-          await client.graphql({
-            query: updateProject.replaceAll("__typename", ""),
-            variables: {
-              input: {
-                id: projectRecord.id,
-                ...modelFields,
-              },
-            },
+          const promises = [];
+          const contractorProjectRelationshipsToLink = [];
+          const contractorProjectRelationshipsToUnLink = [];
+          const contractorProjectRelationshipsSet = new Set();
+          const linkedContractorProjectRelationshipsSet = new Set();
+          ContractorProjectRelationships.forEach((r) =>
+            contractorProjectRelationshipsSet.add(
+              getIDValue.ContractorProjectRelationships?.(r)
+            )
+          );
+          linkedContractorProjectRelationships.forEach((r) =>
+            linkedContractorProjectRelationshipsSet.add(
+              getIDValue.ContractorProjectRelationships?.(r)
+            )
+          );
+          linkedContractorProjectRelationships.forEach((r) => {
+            if (
+              !contractorProjectRelationshipsSet.has(
+                getIDValue.ContractorProjectRelationships?.(r)
+              )
+            ) {
+              contractorProjectRelationshipsToUnLink.push(r);
+            }
           });
+          ContractorProjectRelationships.forEach((r) => {
+            if (
+              !linkedContractorProjectRelationshipsSet.has(
+                getIDValue.ContractorProjectRelationships?.(r)
+              )
+            ) {
+              contractorProjectRelationshipsToLink.push(r);
+            }
+          });
+          contractorProjectRelationshipsToUnLink.forEach((original) => {
+            if (!canUnlinkContractorProjectRelationships) {
+              throw Error(
+                `ContractorProjectRelationships ${original.id} cannot be unlinked from Project because projectID is a required field.`
+              );
+            }
+            promises.push(
+              client.graphql({
+                query: updateContractorProjectRelationships.replaceAll(
+                  "__typename",
+                  ""
+                ),
+                variables: {
+                  input: {
+                    id: original.id,
+                    projectID: null,
+                  },
+                },
+              })
+            );
+          });
+          contractorProjectRelationshipsToLink.forEach((original) => {
+            promises.push(
+              client.graphql({
+                query: updateContractorProjectRelationships.replaceAll(
+                  "__typename",
+                  ""
+                ),
+                variables: {
+                  input: {
+                    id: original.id,
+                    projectID: projectRecord.id,
+                  },
+                },
+              })
+            );
+          });
+          const modelFieldsToSave = {
+            address: modelFields.address ?? null,
+            bath_count: modelFields.bath_count ?? null,
+            bed_count: modelFields.bed_count ?? null,
+            projected_start_date: modelFields.projected_start_date ?? null,
+            actual_start_date: modelFields.actual_start_date ?? null,
+            builder_id: modelFields.builder_id ?? null,
+            city: modelFields.city ?? null,
+            state: modelFields.state ?? null,
+            actual_inspection_date: modelFields.actual_inspection_date ?? null,
+            lot_block: modelFields.lot_block ?? null,
+            model_name: modelFields.model_name ?? null,
+            permit_number: modelFields.permit_number ?? null,
+            projected_list_price: modelFields.projected_list_price ?? null,
+            projected_completion_date:
+              modelFields.projected_completion_date ?? null,
+            actual_completion_date: modelFields.actual_completion_date ?? null,
+            subdivision: modelFields.subdivision ?? null,
+            approximate_latitude: modelFields.approximate_latitude ?? null,
+            approximate_longitude: modelFields.approximate_longitude ?? null,
+            approximate_sqft_house: modelFields.approximate_sqft_house ?? null,
+            assigned_super_id: modelFields.assigned_super_id ?? null,
+            project_notes: modelFields.project_notes ?? null,
+            inspector_id: modelFields.inspector_id ?? null,
+            project_name: modelFields.project_name ?? null,
+            created_by: modelFields.created_by ?? null,
+            zip: modelFields.zip ?? null,
+            businessesID: modelFields.businessesID ?? null,
+          };
+          promises.push(
+            client.graphql({
+              query: updateProject.replaceAll("__typename", ""),
+              variables: {
+                input: {
+                  id: projectRecord.id,
+                  ...modelFieldsToSave,
+                },
+              },
+            })
+          );
+          await Promise.all(promises);
           if (onSuccess) {
             onSuccess(modelFields);
           }
@@ -312,10 +760,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.address ?? value;
@@ -364,10 +814,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.bath_count ?? value;
@@ -416,10 +868,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.bed_count ?? value;
@@ -465,10 +919,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.projected_start_date ?? value;
@@ -516,10 +972,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.actual_start_date ?? value;
@@ -566,10 +1024,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.builder_id ?? value;
@@ -614,10 +1074,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.city ?? value;
@@ -662,10 +1124,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.state ?? value;
@@ -711,10 +1175,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.actual_inspection_date ?? value;
@@ -761,10 +1227,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.lot_block ?? value;
@@ -809,10 +1277,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.model_name ?? value;
@@ -857,10 +1327,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.permit_number ?? value;
@@ -909,10 +1381,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.projected_list_price ?? value;
@@ -960,10 +1434,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.projected_completion_date ?? value;
@@ -1014,10 +1490,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.actual_completion_date ?? value;
@@ -1064,10 +1542,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.subdivision ?? value;
@@ -1116,10 +1596,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.approximate_latitude ?? value;
@@ -1170,10 +1652,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.approximate_longitude ?? value;
@@ -1224,10 +1708,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house: value,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.approximate_sqft_house ?? value;
@@ -1274,10 +1760,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id: value,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.assigned_super_id ?? value;
@@ -1324,10 +1812,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes: value,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.project_notes ?? value;
@@ -1342,6 +1832,121 @@ export default function ProjectUpdateForm(props) {
         hasError={errors.project_notes?.hasError}
         {...getOverrideProps(overrides, "project_notes")}
       ></TextField>
+      <ArrayField
+        onChange={async (items) => {
+          let values = items;
+          if (onChange) {
+            const modelFields = {
+              address,
+              bath_count,
+              bed_count,
+              projected_start_date,
+              actual_start_date,
+              builder_id,
+              city,
+              state,
+              actual_inspection_date,
+              lot_block,
+              model_name,
+              permit_number,
+              projected_list_price,
+              projected_completion_date,
+              actual_completion_date,
+              subdivision,
+              approximate_latitude,
+              approximate_longitude,
+              approximate_sqft_house,
+              assigned_super_id,
+              project_notes,
+              ContractorProjectRelationships: values,
+              inspector_id,
+              project_name,
+              created_by,
+              zip,
+              businessesID,
+            };
+            const result = onChange(modelFields);
+            values = result?.ContractorProjectRelationships ?? values;
+          }
+          setContractorProjectRelationships(values);
+          setCurrentContractorProjectRelationshipsValue(undefined);
+          setCurrentContractorProjectRelationshipsDisplayValue("");
+        }}
+        currentFieldValue={currentContractorProjectRelationshipsValue}
+        label={"Contractor project relationships"}
+        items={ContractorProjectRelationships}
+        hasError={errors?.ContractorProjectRelationships?.hasError}
+        runValidationTasks={async () =>
+          await runValidationTasks(
+            "ContractorProjectRelationships",
+            currentContractorProjectRelationshipsValue
+          )
+        }
+        errorMessage={errors?.ContractorProjectRelationships?.errorMessage}
+        getBadgeText={getDisplayValue.ContractorProjectRelationships}
+        setFieldValue={(model) => {
+          setCurrentContractorProjectRelationshipsDisplayValue(
+            model ? getDisplayValue.ContractorProjectRelationships(model) : ""
+          );
+          setCurrentContractorProjectRelationshipsValue(model);
+        }}
+        inputFieldRef={ContractorProjectRelationshipsRef}
+        defaultFieldValue={""}
+      >
+        <Autocomplete
+          label="Contractor project relationships"
+          isRequired={false}
+          isReadOnly={false}
+          placeholder="Search ContractorProjectRelationships"
+          value={currentContractorProjectRelationshipsDisplayValue}
+          options={contractorProjectRelationshipsRecords
+            .filter(
+              (r) =>
+                !ContractorProjectRelationshipsIdSet.has(
+                  getIDValue.ContractorProjectRelationships?.(r)
+                )
+            )
+            .map((r) => ({
+              id: getIDValue.ContractorProjectRelationships?.(r),
+              label: getDisplayValue.ContractorProjectRelationships?.(r),
+            }))}
+          isLoading={ContractorProjectRelationshipsLoading}
+          onSelect={({ id, label }) => {
+            setCurrentContractorProjectRelationshipsValue(
+              contractorProjectRelationshipsRecords.find((r) =>
+                Object.entries(JSON.parse(id)).every(
+                  ([key, value]) => r[key] === value
+                )
+              )
+            );
+            setCurrentContractorProjectRelationshipsDisplayValue(label);
+            runValidationTasks("ContractorProjectRelationships", label);
+          }}
+          onClear={() => {
+            setCurrentContractorProjectRelationshipsDisplayValue("");
+          }}
+          onChange={(e) => {
+            let { value } = e.target;
+            fetchContractorProjectRelationshipsRecords(value);
+            if (errors.ContractorProjectRelationships?.hasError) {
+              runValidationTasks("ContractorProjectRelationships", value);
+            }
+            setCurrentContractorProjectRelationshipsDisplayValue(value);
+            setCurrentContractorProjectRelationshipsValue(undefined);
+          }}
+          onBlur={() =>
+            runValidationTasks(
+              "ContractorProjectRelationships",
+              currentContractorProjectRelationshipsDisplayValue
+            )
+          }
+          errorMessage={errors.ContractorProjectRelationships?.errorMessage}
+          hasError={errors.ContractorProjectRelationships?.hasError}
+          ref={ContractorProjectRelationshipsRef}
+          labelHidden={true}
+          {...getOverrideProps(overrides, "ContractorProjectRelationships")}
+        ></Autocomplete>
+      </ArrayField>
       <TextField
         label="Inspector id"
         isRequired={false}
@@ -1372,10 +1977,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id: value,
               project_name,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.inspector_id ?? value;
@@ -1420,10 +2027,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name: value,
               created_by,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.project_name ?? value;
@@ -1468,10 +2077,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by: value,
               zip,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.created_by ?? value;
@@ -1520,10 +2131,12 @@ export default function ProjectUpdateForm(props) {
               approximate_sqft_house,
               assigned_super_id,
               project_notes,
+              ContractorProjectRelationships,
               inspector_id,
               project_name,
               created_by,
               zip: value,
+              businessesID,
             };
             const result = onChange(modelFields);
             value = result?.zip ?? value;
@@ -1538,6 +2151,126 @@ export default function ProjectUpdateForm(props) {
         hasError={errors.zip?.hasError}
         {...getOverrideProps(overrides, "zip")}
       ></TextField>
+      <ArrayField
+        lengthLimit={1}
+        onChange={async (items) => {
+          let value = items[0];
+          if (onChange) {
+            const modelFields = {
+              address,
+              bath_count,
+              bed_count,
+              projected_start_date,
+              actual_start_date,
+              builder_id,
+              city,
+              state,
+              actual_inspection_date,
+              lot_block,
+              model_name,
+              permit_number,
+              projected_list_price,
+              projected_completion_date,
+              actual_completion_date,
+              subdivision,
+              approximate_latitude,
+              approximate_longitude,
+              approximate_sqft_house,
+              assigned_super_id,
+              project_notes,
+              ContractorProjectRelationships,
+              inspector_id,
+              project_name,
+              created_by,
+              zip,
+              businessesID: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.businessesID ?? value;
+          }
+          setBusinessesID(value);
+          setCurrentBusinessesIDValue(undefined);
+        }}
+        currentFieldValue={currentBusinessesIDValue}
+        label={"Businesses id"}
+        items={businessesID ? [businessesID] : []}
+        hasError={errors?.businessesID?.hasError}
+        runValidationTasks={async () =>
+          await runValidationTasks("businessesID", currentBusinessesIDValue)
+        }
+        errorMessage={errors?.businessesID?.errorMessage}
+        getBadgeText={(value) =>
+          value
+            ? getDisplayValue.businessesID(
+                businessesIDRecords.find((r) => r.id === value) ??
+                  selectedBusinessesIDRecords.find((r) => r.id === value)
+              )
+            : ""
+        }
+        setFieldValue={(value) => {
+          setCurrentBusinessesIDDisplayValue(
+            value
+              ? getDisplayValue.businessesID(
+                  businessesIDRecords.find((r) => r.id === value) ??
+                    selectedBusinessesIDRecords.find((r) => r.id === value)
+                )
+              : ""
+          );
+          setCurrentBusinessesIDValue(value);
+          const selectedRecord = businessesIDRecords.find(
+            (r) => r.id === value
+          );
+          if (selectedRecord) {
+            setSelectedBusinessesIDRecords([selectedRecord]);
+          }
+        }}
+        inputFieldRef={businessesIDRef}
+        defaultFieldValue={""}
+      >
+        <Autocomplete
+          label="Businesses id"
+          isRequired={false}
+          isReadOnly={false}
+          placeholder="Search Businesses"
+          value={currentBusinessesIDDisplayValue}
+          options={businessesIDRecords
+            .filter(
+              (r, i, arr) =>
+                arr.findIndex((member) => member?.id === r?.id) === i
+            )
+            .map((r) => ({
+              id: r?.id,
+              label: getDisplayValue.businessesID?.(r),
+            }))}
+          isLoading={businessesIDLoading}
+          onSelect={({ id, label }) => {
+            setCurrentBusinessesIDValue(id);
+            setCurrentBusinessesIDDisplayValue(label);
+            runValidationTasks("businessesID", label);
+          }}
+          onClear={() => {
+            setCurrentBusinessesIDDisplayValue("");
+          }}
+          defaultValue={businessesID}
+          onChange={(e) => {
+            let { value } = e.target;
+            fetchBusinessesIDRecords(value);
+            if (errors.businessesID?.hasError) {
+              runValidationTasks("businessesID", value);
+            }
+            setCurrentBusinessesIDDisplayValue(value);
+            setCurrentBusinessesIDValue(undefined);
+          }}
+          onBlur={() =>
+            runValidationTasks("businessesID", currentBusinessesIDValue)
+          }
+          errorMessage={errors.businessesID?.errorMessage}
+          hasError={errors.businessesID?.hasError}
+          ref={businessesIDRef}
+          labelHidden={true}
+          {...getOverrideProps(overrides, "businessesID")}
+        ></Autocomplete>
+      </ArrayField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

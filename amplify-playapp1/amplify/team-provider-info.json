@@ -17,7 +17,21 @@
       },
       "auth": {
         "amplifyplayboxae831b51": {},
-        "amplifyplaybox": {}
+        "amplifyplaybox": {},
+        "amplifyplaybox163dfda7": {}
+      },
+      "function": {
+        "S3Trigger4e82c73b": {
+          "deploymentBucketName": "amplify-amplifyplaybox-staging-11853-deployment",
+          "s3Key": "amplify-builds/S3Trigger4e82c73b-5549636b4e4668767335-build.zip"
+        },
+        "S3Trigger9731a6a8": {
+          "deploymentBucketName": "amplify-amplifyplaybox-staging-11853-deployment",
+          "s3Key": "amplify-builds/S3Trigger9731a6a8-464543784958386d4233-build.zip"
+        }
+      },
+      "storage": {
+        "s3FriendlyName": {}
       }
     }
   }

@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { GridProps, SwitchFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { AutocompleteProps, GridProps, SwitchFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -25,11 +25,13 @@ export declare type BusinessTypesUpdateFormInputValues = {
     business_type_name?: string;
     is_active?: boolean;
     created_by?: string;
+    Businesses?: any[];
 };
 export declare type BusinessTypesUpdateFormValidationValues = {
     business_type_name?: ValidationFunction<string>;
     is_active?: ValidationFunction<boolean>;
     created_by?: ValidationFunction<string>;
+    Businesses?: ValidationFunction<any>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type BusinessTypesUpdateFormOverridesProps = {
@@ -37,6 +39,7 @@ export declare type BusinessTypesUpdateFormOverridesProps = {
     business_type_name?: PrimitiveOverrideProps<TextFieldProps>;
     is_active?: PrimitiveOverrideProps<SwitchFieldProps>;
     created_by?: PrimitiveOverrideProps<TextFieldProps>;
+    Businesses?: PrimitiveOverrideProps<AutocompleteProps>;
 } & EscapeHatchProps;
 export declare type BusinessTypesUpdateFormProps = React.PropsWithChildren<{
     overrides?: BusinessTypesUpdateFormOverridesProps | undefined | null;

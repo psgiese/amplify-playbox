@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { GridProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { AutocompleteProps, GridProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -43,10 +43,12 @@ export declare type ProjectCreateFormInputValues = {
     approximate_sqft_house?: number;
     assigned_super_id?: string;
     project_notes?: string;
+    ContractorProjectRelationships?: any[];
     inspector_id?: string;
     project_name?: string;
     created_by?: string;
     zip?: number;
+    businessesID?: string;
 };
 export declare type ProjectCreateFormValidationValues = {
     address?: ValidationFunction<string>;
@@ -70,10 +72,12 @@ export declare type ProjectCreateFormValidationValues = {
     approximate_sqft_house?: ValidationFunction<number>;
     assigned_super_id?: ValidationFunction<string>;
     project_notes?: ValidationFunction<string>;
+    ContractorProjectRelationships?: ValidationFunction<any>;
     inspector_id?: ValidationFunction<string>;
     project_name?: ValidationFunction<string>;
     created_by?: ValidationFunction<string>;
     zip?: ValidationFunction<number>;
+    businessesID?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type ProjectCreateFormOverridesProps = {
@@ -99,10 +103,12 @@ export declare type ProjectCreateFormOverridesProps = {
     approximate_sqft_house?: PrimitiveOverrideProps<TextFieldProps>;
     assigned_super_id?: PrimitiveOverrideProps<TextFieldProps>;
     project_notes?: PrimitiveOverrideProps<TextFieldProps>;
+    ContractorProjectRelationships?: PrimitiveOverrideProps<AutocompleteProps>;
     inspector_id?: PrimitiveOverrideProps<TextFieldProps>;
     project_name?: PrimitiveOverrideProps<TextFieldProps>;
     created_by?: PrimitiveOverrideProps<TextFieldProps>;
     zip?: PrimitiveOverrideProps<TextFieldProps>;
+    businessesID?: PrimitiveOverrideProps<AutocompleteProps>;
 } & EscapeHatchProps;
 export declare type ProjectCreateFormProps = React.PropsWithChildren<{
     overrides?: ProjectCreateFormOverridesProps | undefined | null;
